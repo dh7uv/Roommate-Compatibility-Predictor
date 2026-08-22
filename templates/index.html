@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Roommate Compatibility Predictor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <main class="page-shell">
+        <header class="hero">
+            <p class="eyebrow">AI-Based Matching</p>
+            <h1>Roommate Compatibility Predictor</h1>
+            <p class="hero-copy">
+                Find the most compatible roommate for yourself!
+            </p>
+        </header>
+
+        <div class="layout-grid">
+            <section class="card controls-card">
+                <h2>Recommendation Mode</h2>
+                <form method="post" class="predictor-form">
+                    <div class="mode-row">
+                        <label class="mode-pill">
+                            <input type="radio" name="mode" value="existing" {% if mode == "existing" %}checked{% endif %}>
+                            <span>Existing student</span>
+                        </label>
+                        <label class="mode-pill">
+                            <input type="radio" name="mode" value="manual" {% if mode == "manual" %}checked{% endif %}>
+                            <span>New profile input</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group existing-only" {% if mode != "existing" %}hidden{% endif %}>
+                        <label for="selected_user">Select student</label>
+                        <select id="selected_user" name="selected_user" {% if mode != "existing" %}disabled{% endif %}>
+                            {% for user in users %}
+                                <option value="{{ user }}" {% if user == selected_user %}selected{% endif %}>{{ user }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group manual-only" {% if mode != "manual" %}hidden{% endif %}>
+                        <label for="manual_name">New user name</label>
+                        <input id="manual_name" name="manual_name" type="text" value="{{ manual_name }}" placeholder="Enter the new student's name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender">Gender for matching</label>
+                        <select id="gender" name="gender">
+                            {% for option in ["Male", "Female", "Other"] %}
+                                <option value="{{ option }}" {% if option == gender %}selected{% endif %}>{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="field-note">Only same-gender compatibility results will be shown.</p>
+                    </div>
+
+                    <div class="fields-block">
+                        <h3>Manual lifestyle inputs</h3>
+                        <p class="muted">Use the 1-5 scale by clicking on the dropdown.</p>
+
+                        {% for field in field_help %}
+                            <div class="field-card">
+                                <div class="field-copy">
+                                    <label for="{{ field.name }}">{{ field.label }}</label>
+                                    <p>{{ field.description }}</p>
+                                </div>
+                                <div class="field-input">
+                                    <select id="{{ field.name }}" name="{{ field.name }}">
+                                        {% for value in ["1", "2", "3", "4", "5"] %}
+                                            <option value="{{ value }}" {% if manual_values[field.name] == value %}selected{% endif %}>{{ value }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <button type="submit" class="primary-button">Show Compatibility List</button>
+                </form>
+            </section>
+
+            <section class="card results-card">
+                <div class="status-panel">
+                    <h2>Model Status</h2>
+                    <p>{{ status }}</p>
+                </div>
+
+                <div class="results-panel">
+                    <h2>Compatibility Results</h2>
+                    {% if same_cluster_results or outside_cluster_results %}
+                        <div class="explanations">
+                            {% if same_cluster_results %}
+                                {% for match in same_cluster_results %}
+                                    <article class="explanation-card">
+                                        <h4>{{ loop.index }}. {{ match.full_name }}</h4>
+                                        <p>
+                                            <strong>{{ "%.2f"|format(match.compatibility_score) }}%</strong>
+                                            compatibility. {{ match.explanation }}
+                                        </p>
+                                    </article>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state compact-empty">
+                                    <p>No same-gender match was found inside the current cluster.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="explanations">
+                            {% if outside_cluster_results %}
+                                {% for match in outside_cluster_results %}
+                                    <article class="explanation-card spotlight-card">
+                                        <h4>{{ same_cluster_results|length + loop.index }}. {{ match.full_name }}</h4>
+                                        <p>
+                                            <strong>{{ "%.2f"|format(match.compatibility_score) }}%</strong>
+                                            compatibility. {{ match.explanation }}
+                                        </p>
+                                    </article>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state compact-empty">
+                                    <p>No same-gender matches were found outside the current cluster.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <p>No compatibility list yet. Submit the form to view matches.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const modeInputs = document.querySelectorAll('input[name="mode"]');
+        const studentSelect = document.getElementById('selected_user');
+        const existingBlocks = document.querySelectorAll('.existing-only');
+        const manualBlocks = document.querySelectorAll('.manual-only');
+
+        function syncMode() {
+            const selected = document.querySelector('input[name="mode"]:checked');
+            if (!selected || !studentSelect) return;
+            studentSelect.disabled = selected.value !== 'existing';
+            existingBlocks.forEach((block) => {
+                block.hidden = selected.value !== 'existing';
+            });
+            manualBlocks.forEach((block) => {
+                block.hidden = selected.value !== 'manual';
+            });
+        }
+
+        modeInputs.forEach((input) => input.addEventListener('change', syncMode));
+        syncMode();
+    </script>
+</body>
+</html>
