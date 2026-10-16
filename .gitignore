@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+
+# Private student survey data
+responses.csv
