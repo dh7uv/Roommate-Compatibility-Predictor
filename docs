@@ -1,0 +1,36 @@
+# Manual testing checklist
+
+Run these checks after installing dependencies and before pushing changes.
+
+## Startup and dataset
+
+- [ ] `python app.py` starts without an import error.
+- [ ] The homepage loads at `http://127.0.0.1:5000/`.
+- [ ] A missing `responses.csv` produces a clear message rather than an unhandled traceback.
+- [ ] A valid dataset loads and the page reports the number of usable profiles.
+- [ ] Missing optional columns do not silently turn personal/contact fields into model features.
+
+## Existing profile flow
+
+- [ ] The user selector lists available profiles.
+- [ ] Submitting without a selected profile gives a helpful message.
+- [ ] Recommendations do not include the selected profile itself.
+- [ ] Same-cluster and outside-cluster results are displayed in the appropriate sections.
+- [ ] The same-gender filter behaves as documented.
+- [ ] Empty or very small candidate groups are handled gracefully.
+
+## Manual profile flow
+
+- [ ] A new profile can be submitted with valid values.
+- [ ] Empty names and invalid numeric values produce helpful validation messages.
+- [ ] Values outside the intended range are rejected or normalized consistently.
+- [ ] Submitting an existing name has the expected update behaviour.
+- [ ] Saving a profile does not damage the original CSV columns or rows.
+- [ ] The new profile is not recommended as its own match.
+
+## Privacy and deployment
+
+- [ ] No real student data is committed.
+- [ ] Debug mode is disabled before deployment.
+- [ ] Errors shown to users do not reveal file paths or sensitive information.
+- [ ] The dataset write path and access permissions are appropriate for the environment.
